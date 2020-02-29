@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
+const replaceHtml = require('./modules/createTemplate');
 
 //blocking, sync
 //const textIn = fs.readFileSync('./txt/input.txt', 'utf-8');
@@ -25,24 +26,6 @@ const overview = fs.readFileSync(`${__dirname}/templates/overview.html`, 'utf-8'
 const card = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
 // product template
 const product = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
-
-//replace element function : to replace cards in the overview page
-const replaceHtml = (temp, pro) => {
-    let output = temp.replace(/{%PRODUCTNAME%}/, pro.productName);
-    output = output.replace(/{%IMAGE%}/g, pro.image);
-    output = output.replace(/{%PRODUCTCOUNTERY%}/g, pro.from);
-    output = output.replace(/{%PRODUCTQUANTITY%}/g, pro.quantity);
-    output = output.replace(/{%PRICE%}/g, pro.price);
-    output = output.replace(/{%PRODUCTNAME%}/g, pro.productName);
-    if (!pro.organic) {
-        output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
-    }
-    output = output.replace(/{%ID%}/g, pro.id);
-    output = output.replace(/{%PRODUCTNUTRIANS%}/g, pro.nutrients);
-    output = output.replace(/{%PRODUCTPRICE%}/g, pro.price);
-    output = output.replace(/{%DESCRIPTION%}/g, pro.description);
-    return output;
-}
 
 const server = http.createServer((req, res) => {
     // get requested url
