@@ -2,19 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 const replaceHtml = require('./modules/createTemplate');
-
-//blocking, sync
-//const textIn = fs.readFileSync('./txt/input.txt', 'utf-8');
-//console.log(textIn);
-//const textOut = `this is what we know about the avocado: ${textIn}.\nCreated on ${Date.now()}`;
-//console.log(textOut);
-//fs.writeFileSync('./txt/output.txt', textOut);
-
-//ublocking, async
-
-// fs.readFile('./txt/start.txt', 'utf-8', (err, data) => {
-//     console.log(data);
-// });
+const slugify = require('slugify');
 
 //api json data
 const apiData = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
@@ -30,6 +18,10 @@ const product = fs.readFileSync(`${__dirname}/templates/template-product.html`, 
 const server = http.createServer((req, res) => {
     // get requested url
     const {pathname, query} = url.parse(req.url, true);
+    // sulgyify all urls
+    const slugs = dataObj.map(el => slugify(el.productName, { lower: true }));
+    console.log(slugs);
+    
     
 
     switch (pathname) {
