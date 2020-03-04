@@ -2,7 +2,7 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "Learning Node express and MongoDB.",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "nodemon server.js"
   },
