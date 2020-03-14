@@ -1,16 +1,15 @@
 const Tour = require('./../models/tourModel');
+const APIFeatures = require('./../utils/apiFeaturs');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const queryObj = { ...req.query };
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach(el => delete queryObj[el]);
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
+    const tours = await features.query;
 
-    let queryString = JSON.stringify(queryObj);
-    queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-    console.log(JSON.parse(queryString));
-
-    const tours = await Tour.find(queryObj);
     res.status(200).json({
       status: 'sucess',
       result: tours.length,
@@ -95,6 +94,29 @@ exports.deleteTour = async (req, res) => {
       status: 'sucess',
       data: {
         tour: deleteTour
+      }
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      error: {
+        message: err
+      }
+    });
+  }
+};
+
+exports.getTourStat = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } }
+      }
+    ]);
+    res.status(202).json({
+      status: 'sucess',
+      data: {
+        stats
       }
     });
   } catch (err) {
