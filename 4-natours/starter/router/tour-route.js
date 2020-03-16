@@ -8,6 +8,8 @@ router
   .get(tourController.getAllTours)
   .post(tourController.addTour);
 
+router.route('/tour-statictics').get(tourController.getTourStat);
+
 router
   .route('/:id')
   .get(tourController.getTour)
