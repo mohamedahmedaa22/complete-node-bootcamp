@@ -17,6 +17,7 @@
     "mongoose": "^5.9.3",
     "morgan": "^1.9.1",
     "ndb": "^1.1.5",
+    "nodemailer": "^6.4.6",
     "validator": "^13.0.0"
   },
   "devDependencies": {

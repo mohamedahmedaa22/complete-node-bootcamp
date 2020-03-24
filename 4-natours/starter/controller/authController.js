@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const sendEmail = require('./../utils/mailer');
 
 const signToken = id =>
   jwt.sign({ id: id }, process.env.JWT_SECRET, {
@@ -90,4 +91,45 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   req.user = freshUser;
   next();
+});
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError(`You aren't Allowed to preform this action.`, 403)
+      );
+    }
+
+    next();
+  };
+};
+
+exports.forgetPassword = catchAsync(async (req, res, next) => {
+  // get the user email
+  const user = await User.findOne({ email: req.body.email });
+
+  //create random token
+  const resetToken = user.createPasswordRestToken();
+  await user.save({ validateBeforeSave: false });
+
+  //send token email
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/resetPassword/${resetToken}`;
+
+  const message = `Forgot your password?\nplease do a patch request to our website with your new password and passwordConfirm\n${resetURL}`;
+
+  await sendEmail({
+    email: user.email,
+    subject: 'Your password reset Token',
+    message: message
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      message: `Token sent to ${user.email}.`
+    }
+  });
 });
