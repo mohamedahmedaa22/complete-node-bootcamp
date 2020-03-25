@@ -2,6 +2,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
 const tourRouter = require('./router/tour-route');
 const userRouter = require('./router/user-route');
 const AppError = require('./utils/appError');
@@ -13,6 +14,14 @@ dotenv.config({ path: './config.env' });
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request from this IP please try again in one hour!'
+});
+
+app.use('/api', limiter);
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
 

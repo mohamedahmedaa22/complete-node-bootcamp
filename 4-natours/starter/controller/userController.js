@@ -63,3 +63,19 @@ exports.updateData = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+exports.deleteMyAccount = catchAsync(async (req, res, next) => {
+  const deactiveUser = await User.findByIdAndUpdate(
+    req.user.id,
+    { activeAccount: false },
+    { new: true, runValidators: true }
+  );
+
+  res.status(204).json({
+    status: 'sucess',
+    data: {
+      message: `Account ${deactiveUser.email} Deactivated successfully.`,
+      user: deactiveUser
+    }
+  });
+});
