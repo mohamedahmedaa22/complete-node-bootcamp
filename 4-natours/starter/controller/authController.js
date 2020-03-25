@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
@@ -109,6 +110,10 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   // get the user email
   const user = await User.findOne({ email: req.body.email });
 
+  if (!user) {
+    return next(new AppError('This email is not registered!', 404));
+  }
+
   //create random token
   const resetToken = user.createPasswordRestToken();
   await user.save({ validateBeforeSave: false });
@@ -132,4 +137,63 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
       message: `Token sent to ${user.email}.`
     }
   });
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) find the user with token
+  const hasedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hasedToken,
+    passwordResetExpires: { $gte: Date.now() }
+  });
+
+  if (!user) {
+    return next(new AppError('Invalid or expired token!', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token
+  });
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // get the user
+  const user = await User.findOne({ _id: req.user.id }).select('+password');
+
+  // check the user current password
+  if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
+    return next(new AppError('Your current password is invalid!', 401));
+  }
+
+  //update the password
+  try {
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+
+    await user.save();
+
+    // login the user with new token
+    const token = signToken(user._id);
+    res.status(200).json({
+      status: 'success',
+      token
+    });
+  } catch (err) {
+    return next(
+      new AppError('an error happened while updating the password', 400)
+    );
+  }
 });
